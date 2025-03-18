@@ -1,22 +1,24 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:agri_market/auth/sign_in.dart';
 import 'package:agri_market/config/colors.dart';
-import 'package:agri_market/providers/user_provider.dart';
 import 'package:agri_market/screens/home_screen/home_screen.dart';
 import 'package:agri_market/screens/my_profile/my_profile.dart';
 import 'package:agri_market/screens/review_cart/review_cart.dart';
 import 'package:agri_market/screens/wish_list/wish_list.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
+
+import '../../auth/welcomescreen.dart';
 
 class DrawerSide extends StatefulWidget {
-  final UserProvider userProvider;
-  DrawerSide({required this.userProvider});
+  const DrawerSide({Key? key}) : super(key: key);
 
   @override
-  State<DrawerSide> createState() => _DrawerSideState();
+  _DrawerSideState createState() => _DrawerSideState();
 }
 
 class _DrawerSideState extends State<DrawerSide> {
+  final User? user = FirebaseAuth.instance.currentUser; // Get current user
+
   Widget listTile({
     required String title,
     required IconData iconData,
@@ -24,163 +26,115 @@ class _DrawerSideState extends State<DrawerSide> {
   }) {
     return ListTile(
       onTap: onTap,
-      leading: Icon(
-        iconData,
-        size: 32,
-      ),
+      leading: Icon(iconData, size: 30, color: Colors.black87),
       title: Text(
         title,
-        style: TextStyle(color: textColor),
+        style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 16),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    var userData = widget.userProvider.currentUserData;
-
     return Drawer(
       child: Container(
-        color: Color(0xFFD4FBD8),
-        child: ListView(
+        color: Color(0xFFD4FBD8), // Light Green Background
+        child: Column(
           children: [
-            DrawerHeader(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundColor: Colors.white54,
-                      radius: 43,
-                      child: CircleAvatar(
-                        radius: 40,
-                        backgroundColor: Colors.yellow,
-                        backgroundImage: NetworkImage(userData.userImage),
-                      ),
-                    ),
-                    SizedBox(width: 20),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(userData.userName),
-                        Text(
-                          userData.userEmail,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        SizedBox(height: 7),
-                        Container(
-                          height: 30,
-                          child: OutlinedButton(
-                            onPressed: () async {
-                              // Log out user when the button is pressed
-                              await FirebaseAuth.instance.signOut();
-                              // Navigate to the SignIn screen after logging out
-                              Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => SignIn()));
-                            },
-                            child: Text("LogOut"),
-                          ),
-                        ),
-                      ],
-                    )
-                  ],
+            // Profile Section
+            Container(
+              padding: EdgeInsets.only(top: 50, bottom: 20),
+              decoration: BoxDecoration(
+                color: Colors.green.shade100,
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(20),
+                  bottomRight: Radius.circular(20),
                 ),
               ),
-            ),
-            listTile(
-              iconData: Icons.home_outlined,
-              title: "Home",
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => HomeScreen(),
-                  ),
-                );
-              },
-            ),
-            listTile(
-              iconData: Icons.shop_outlined,
-              title: "Review Cart",
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => ReviewCart(),
-                  ),
-                );
-              },
-            ),
-            listTile(
-              iconData: Icons.person_outlined,
-              title: "My Profile",
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        MyProfile(userProvider: widget.userProvider),
-                  ),
-                );
-              },
-            ),
-            listTile(
-              iconData: Icons.notification_add_outlined,
-              title: "Notification",
-              onTap: () {},
-            ),
-            listTile(
-              iconData: Icons.star_outlined,
-              title: "Rating & Review",
-              onTap: () {},
-            ),
-            listTile(
-              iconData: Icons.favorite_outlined,
-              title: "WishList",
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => WishList(),
-                  ),
-                );
-              },
-            ),
-            listTile(
-              iconData: Icons.copy_outlined,
-              title: "Raise a Complaint",
-              onTap: () {},
-            ),
-            listTile(
-              iconData: Icons.format_quote_outlined,
-              title: "FAQs",
-              onTap: () {},
-            ),
-            Container(
-              height: 350,
-              padding: EdgeInsets.symmetric(horizontal: 20),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Contact Support"),
-                  SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Text("Call Us:"),
-                      SizedBox(width: 5),
-                      Text("+917448058569"),
-                    ],
+                  CircleAvatar(
+                    radius: 50,
+                    backgroundColor: Colors.white,
+                    child: CircleAvatar(
+                      radius: 48,
+                      backgroundImage: user?.photoURL != null
+                          ? NetworkImage(user!.photoURL!)
+                          : AssetImage("assets/default_avatar.png") as ImageProvider,
+                    ),
                   ),
-                  SizedBox(height: 5),
-                  Row(
-                    children: [
-                      Text("Mail Us:"),
-                      SizedBox(width: 5),
-                      Flexible(
-                        child: Text(
-                          "lipaneprajkta@gmail.com",
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
+                  SizedBox(height: 10),
+                  Text(
+                    user?.displayName ?? "Guest User",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                   ),
                 ],
+              ),
+            ),
+
+            // Menu Options
+            Expanded(
+              child: Column(
+                children: [
+                  listTile(
+                    iconData: Icons.home_outlined,
+                    title: "Home",
+                    onTap: () {
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(builder: (context) => HomeScreen()),
+                      );
+                    },
+                  ),
+                  listTile(
+                    iconData: Icons.shop_outlined,
+                    title: "Review Cart",
+                    onTap: () {
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(builder: (context) => ReviewCart()),
+                      );
+                    },
+                  ),
+                  listTile(
+                    iconData: Icons.person_outlined,
+                    title: "My Profile",
+                    onTap: () {
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(builder: (context) => MyProfile()),
+                      );
+                    },
+                  ),
+                  listTile(
+                    iconData: Icons.favorite_outlined,
+                    title: "WishList",
+                    onTap: () {
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(builder: (context) => WishList()),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+
+            // Logout Button
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.redAccent,
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  onPressed: () async {
+                    await FirebaseAuth.instance.signOut();
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(builder: (context) => WelcomeScreen()),
+                    );
+                  },
+                  icon: Icon(Icons.logout, color: Colors.white),
+                  label: Text("Logout", style: TextStyle(color: Colors.white)),
+                ),
               ),
             ),
           ],
@@ -193,178 +147,176 @@ class _DrawerSideState extends State<DrawerSide> {
 
 
 
+
+// import 'package:agri_market/auth/sign_in.dart';
 // import 'package:agri_market/config/colors.dart';
 // import 'package:agri_market/providers/user_provider.dart';
 // import 'package:agri_market/screens/home_screen/home_screen.dart';
 // import 'package:agri_market/screens/my_profile/my_profile.dart';
 // import 'package:agri_market/screens/review_cart/review_cart.dart';
 // import 'package:agri_market/screens/wish_list/wish_list.dart';
+// import 'package:firebase_auth/firebase_auth.dart';
 // import 'package:flutter/material.dart';
+// import 'package:provider/provider.dart';
 //
-// class DrawerSide extends StatefulWidget{
+// import '../../auth/welcomescreen.dart';
 //
-//   UserProvider userProvider;
-//   DrawerSide({ required this.userProvider});
+// class DrawerSide extends StatefulWidget {
+//   final UserProvider userProvider;
+//
+//   const DrawerSide({Key? key, required this.userProvider}) : super(key: key);
 //
 //   @override
-//   State<DrawerSide> createState() => _DrawerSideState();
+//   _DrawerSideState createState() => _DrawerSideState();
 // }
 //
 // class _DrawerSideState extends State<DrawerSide> {
-//   Widget listTile ({required String title, required IconData iconData,required Function() onTap}){
+//   @override
+//   void initState() {
+//     super.initState();
+//     widget.userProvider.fetchUserData(); // Fetch user data on init
+//   }
+//
+//   Widget listTile({
+//     required String title,
+//     required IconData iconData,
+//     required Function() onTap,
+//   }) {
 //     return ListTile(
 //       onTap: onTap,
-//       leading: Icon(
-//         iconData,
-//         size: 32,
-//       ),
+//       leading: Icon(iconData, size: 30, color: Colors.black87),
 //       title: Text(
 //         title,
-//         style: TextStyle(color: textColor),
+//         style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 16),
 //       ),
 //     );
 //   }
 //
 //   @override
 //   Widget build(BuildContext context) {
+//     return Consumer<UserProvider>(
+//       builder: (context, userProvider, child) {
+//         if (userProvider.isLoading) {
+//           return Drawer(
+//             child: Center(child: CircularProgressIndicator()),
+//           );
+//         }
 //
-//     // TODO: implement build
-//     var userData = widget.userProvider.currentUserData;
+//         var userData = userProvider.currentUserData;
+//         if (userData == null) {
+//           return Drawer(
+//             child: Center(child: Text("User data not found!")),
+//           );
+//         }
 //
-//     return Drawer(
-//       child: Container(
-//         color: Color(0xFFD4FBD8),
-//         child: ListView(
-//           children: [
-//             DrawerHeader(
-//               child: SingleChildScrollView(
-//                 scrollDirection: Axis.horizontal,
-//                 child: Row(
-//                   children: [
-//                     CircleAvatar(
-//                       backgroundColor:Colors.white54,
-//                       radius: 43,
-//                       child: CircleAvatar(
-//                         radius: 40,
-//                         backgroundColor: Colors.yellow,
-//                         backgroundImage: NetworkImage(
-//                             userData.userImage
-//                         ),
-//                       ),
+//         return Drawer(
+//           child: Container(
+//             color: Color(0xFFD4FBD8), // Light Green Background
+//             child: Column(
+//               children: [
+//                 // Profile Section
+//                 Container(
+//                   padding: EdgeInsets.only(top: 50, bottom: 20),
+//                   decoration: BoxDecoration(
+//                     color: Colors.green.shade100,
+//                     borderRadius: BorderRadius.only(
+//                       bottomLeft: Radius.circular(20),
+//                       bottomRight: Radius.circular(20),
 //                     ),
-//                     SizedBox(
-//                       width: 20,
-//                     ),
-//                     Column(
-//                       crossAxisAlignment: CrossAxisAlignment.start,
-//                       mainAxisAlignment: MainAxisAlignment.center,
-//                       children: [
-//                         Text(
-//                           userData.userName,
-//                         ),
-//                         Text(userData.userEmail,overflow: TextOverflow.ellipsis,),
-//                         SizedBox(height: 7,
-//                         ),
-//                         Container(
-//                           height: 30,
-//                           child: OutlinedButton(
-//                             onPressed: () {} ,
-//                             child: Text("Login"),
-//                             //shape 4 lin e code reaminining
-//                           ),
-//                         ),
-//                       ],
-//                     )
-//                   ],
-//                 ),
-//               ),
-//             ),
-//             listTile(iconData:Icons.home_outlined, title: "Home",
-//                 onTap: (){
-//                   Navigator.of(context).push(
-//                     MaterialPageRoute(
-//                       builder: (context) => HomeScreen(),
-//                     ),
-//                   );
-//                 }),
-//             listTile(iconData:Icons.shop_outlined, title: "Review Cart",
-//                 onTap: (){
-//                   Navigator.of(context).push(
-//                     MaterialPageRoute(
-//                       builder: (context) => ReviewCart(),
-//                     ),
-//                   );
-//                 }),
-//             listTile(iconData:Icons.person_outlined, title: "My Profile",
-//                 onTap: (){
-//                   Navigator.of(context).push(
-//                     MaterialPageRoute(
-//                       builder: (context) => MyProfile(userProvider:widget.userProvider),
-//                     ),
-//                   );
-//             }),
-//             listTile(iconData:Icons.notification_add_outlined, title: "Notification",
-//                 onTap: (){
-//
-//                 }),
-//             listTile(iconData:Icons.star_outlined, title: "Rating & Review",
-//                 onTap: (){
-//
-//                 }),
-//             listTile(iconData:Icons.favorite_outlined, title: "WishList",
-//                 onTap: (){
-//                   Navigator.of(context).push(
-//                     MaterialPageRoute(
-//                       builder: (context) => WishList(),
-//                     ),
-//                   );
-//                 }),
-//             listTile(iconData:Icons.copy_outlined, title: "Raise a Complaint",
-//                 onTap: (){
-//
-//                 }),
-//             listTile(iconData:Icons.format_quote_outlined, title: "FAQs",
-//                 onTap: (){
-//                 }),
-//
-//
-//             Container(
-//               height: 350,
-//               padding: EdgeInsets.symmetric(horizontal: 20),
-//               child: Column(
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 children: [
-//                   Text("Contact Support"),
-//                   SizedBox(
-//                     height: 10,
 //                   ),
-//                   Row(
+//                   child: Column(
 //                     children: [
-//                       Text(" Call Us:"),
-//                       SizedBox( height: 10,
+//                       CircleAvatar(
+//                         radius: 50,
+//                         backgroundColor: Colors.white,
+//                         child: CircleAvatar(
+//                           radius: 48,
+//                           backgroundImage: NetworkImage(userData.userImage),
+//                         ),
 //                       ),
-//                       Text("+917448058569"),
+//                       SizedBox(height: 10),
+//                       Text(
+//                         userData.userName,
+//                         style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+//                       ),
 //                     ],
 //                   ),
-//                   SizedBox( height: 5,
+//                 ),
+//
+//                 // Menu Options
+//                 Expanded(
+//                   child: Column(
+//                     children: [
+//                       listTile(
+//                         iconData: Icons.home_outlined,
+//                         title: "Home",
+//                         onTap: () {
+//                           Navigator.of(context).pushReplacement(
+//                             MaterialPageRoute(builder: (context) => HomeScreen()),
+//                           );
+//                         },
+//                       ),
+//                       listTile(
+//                         iconData: Icons.shop_outlined,
+//                         title: "Review Cart",
+//                         onTap: () {
+//                           Navigator.of(context).pushReplacement(
+//                             MaterialPageRoute(builder: (context) => ReviewCart()),
+//                           );
+//                         },
+//                       ),
+//                       listTile(
+//                         iconData: Icons.person_outlined,
+//                         title: "My Profile",
+//                         onTap: () {
+//                           Navigator.of(context).pushReplacement(
+//                             MaterialPageRoute(
+//                               builder: (context) => MyProfile(userProvider: userProvider),
+//                             ),
+//                           );
+//                         },
+//                       ),
+//                       listTile(
+//                         iconData: Icons.favorite_outlined,
+//                         title: "WishList",
+//                         onTap: () {
+//                           Navigator.of(context).pushReplacement(
+//                             MaterialPageRoute(builder: (context) => WishList()),
+//                           );
+//                         },
+//                       ),
+//                     ],
 //                   ),
-//                   SingleChildScrollView(
-//                     scrollDirection: Axis.horizontal,
-//                     child: Row(
-//                       children: [
-//                         Text(" Mail Us:"),
-//                         SizedBox( height: 10,
-//                         ),
-//                         Text(" lipaneprajkta@gmail.com"),
-//                       ],
+//                 ),
+//
+//                 // Logout Button
+//                 Padding(
+//                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+//                   child: SizedBox(
+//                     width: double.infinity,
+//                     child: ElevatedButton.icon(
+//                       style: ElevatedButton.styleFrom(
+//                         backgroundColor: Colors.redAccent,
+//                         padding: EdgeInsets.symmetric(vertical: 12),
+//                       ),
+//                       onPressed: () async {
+//                         await FirebaseAuth.instance.signOut();
+//                         Navigator.of(context).pushReplacement(
+//                           MaterialPageRoute(builder: (context) => WelcomeScreen()),
+//                         );
+//                       },
+//                       icon: Icon(Icons.logout, color: Colors.white),
+//                       label: Text("Logout", style: TextStyle(color: Colors.white)),
 //                     ),
 //                   ),
-//                 ],
-//               ),
+//                 ),
+//               ],
 //             ),
-//           ],
-//         ),
-//       ),
+//           ),
+//         );
+//       },
 //     );
 //   }
 // }
+//
+//

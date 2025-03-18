@@ -1,3 +1,4 @@
+
 import 'package:agri_market/config/colors.dart';
 import 'package:agri_market/providers/check_out_provider.dart';
 import 'package:agri_market/providers/product_provider.dart';
@@ -10,6 +11,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'auth/sign_in.dart';
 import 'package:firebase_core/firebase_core.dart';
+
+import 'auth/welcomescreen.dart';
 
 void main()async {
  WidgetsFlutterBinding.ensureInitialized();
@@ -55,7 +58,7 @@ class MyApp extends StatelessWidget {
             if (snapShot.hasData) {
               return HomeScreen();
             }
-            return SignIn();
+            return HomeScreen();
           },
         ),
       ),

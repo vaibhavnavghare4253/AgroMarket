@@ -219,12 +219,12 @@ class _HomeScreenState extends State<HomeScreen> {
     // TODO: implement build
     productProvider = Provider.of(context,);
     UserProvider userProvider = Provider.of(context);
-    userProvider.getUserData();
+    // userProvider.getUserData();
 
     return Scaffold(
       backgroundColor: Color(0xFFD4FBD8),
       drawer: DrawerSide(
-        userProvider: userProvider,
+        // userProvider: userProvider,
       ),
       appBar: AppBar(
         iconTheme: IconThemeData(color: Colors.black),
