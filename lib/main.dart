@@ -6,6 +6,7 @@ import 'package:agri_market/providers/review_cart_provider.dart';
 import 'package:agri_market/providers/user_provider.dart';
 import 'package:agri_market/providers/wish_list_provider.dart';
 import 'package:agri_market/screens/home_screen/home_screen.dart';
+import 'package:agri_market/screens/nav_bar/nav_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -56,9 +57,9 @@ class MyApp extends StatelessWidget {
           stream: FirebaseAuth.instance.authStateChanges(),
           builder: (context, snapShot) {
             if (snapShot.hasData) {
-              return HomeScreen();
+              return BottomNavBar();
             }
-            return HomeScreen();
+            return WelcomeScreen();
           },
         ),
       ),

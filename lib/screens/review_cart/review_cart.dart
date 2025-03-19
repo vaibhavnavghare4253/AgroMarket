@@ -10,32 +10,34 @@ import 'package:provider/provider.dart';
 
 class ReviewCart extends StatelessWidget {
   late ReviewCartProvider reviewCartProvider;
+
   showAlertDialog(BuildContext context, ReviewCartModel delete) {
-    // set up the buttons
+    // Alert dialog buttons
     Widget cancelButton = TextButton(
       child: Text("No"),
-      onPressed:  () {
+      onPressed: () {
         Navigator.of(context).pop();
       },
     );
     Widget continueButton = TextButton(
       child: Text("Yes"),
-      onPressed:  () {
+      onPressed: () {
         reviewCartProvider.reviewCartDataDelete(delete.cartId);
         Navigator.of(context).pop();
       },
     );
-    // set up the AlertDialog
+
+    // Set up the AlertDialog
     AlertDialog alert = AlertDialog(
       title: Text("Cart Product"),
-      content: Text("You want to Delete Product?"),
+      content: Text("Do you want to delete this product?"),
       actions: [
         cancelButton,
         continueButton,
       ],
     );
 
-    // show the dialog
+    // Show the dialog
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -43,10 +45,12 @@ class ReviewCart extends StatelessWidget {
       },
     );
   }
+
   @override
   Widget build(BuildContext context) {
-     reviewCartProvider = Provider.of<ReviewCartProvider>(context);
+    reviewCartProvider = Provider.of<ReviewCartProvider>(context);
     reviewCartProvider.getReviewCartData();
+
     return Scaffold(
       bottomNavigationBar: ListTile(
         title: Text("Total Amount"),
@@ -69,8 +73,9 @@ class ReviewCart extends StatelessWidget {
                 Fluttertoast.showToast(msg: "Cart is Empty");
                 return;
               }
-              Navigator.of(context).push(MaterialPageRoute(builder: (context)=>DeliveryDetails(),
-              ),);
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => DeliveryDetails()),
+              );
             },
           ),
         ),
@@ -80,21 +85,33 @@ class ReviewCart extends StatelessWidget {
           "Review Cart",
           style: TextStyle(color: textColor, fontSize: 18),
         ),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.black), // Back arrow icon
+          onPressed: () {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context); // Go back to the previous screen safely
+            } else {
+              // If no previous screen, navigate to Home instead of black screen
+              Navigator.pushReplacementNamed(context, "/home");
+            }
+          },
+        ),
       ),
-      body: reviewCartProvider.getReviewCartDataList.isEmpty?Center(
+      body: reviewCartProvider.getReviewCartDataList.isEmpty
+          ? Center(
         child: Lottie.asset(
-          'assets/emptycart.json', // Add your animation file
-          fit: BoxFit.contain),
-      ):
-      ListView.builder(
+          'assets/emptycart.json', // Animation for empty cart
+          fit: BoxFit.contain,
+        ),
+      )
+          : ListView.builder(
         itemCount: reviewCartProvider.getReviewCartDataList.length,
-        itemBuilder: (context, index){
-          ReviewCartModel data = reviewCartProvider.getReviewCartDataList[index];
+        itemBuilder: (context, index) {
+          ReviewCartModel data =
+          reviewCartProvider.getReviewCartDataList[index];
           return Column(
             children: [
-              SizedBox(
-                height: 10,
-              ),
+              SizedBox(height: 10),
               SingleItem(
                 isBool: true,
                 wishList: false,
@@ -103,8 +120,7 @@ class ReviewCart extends StatelessWidget {
                 productPrice: data.cartPrice,
                 productId: data.cartId,
                 productQuantity: data.cartQuantity,
-               // productUnit: data.cartUnit,
-                onDelete: (){
+                onDelete: () {
                   showAlertDialog(context, data);
                 },
               ),

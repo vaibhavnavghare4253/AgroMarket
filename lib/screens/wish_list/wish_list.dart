@@ -59,7 +59,11 @@ class _WishListState extends State<WishList> {
           "WishList",
           style: TextStyle(color: textColor, fontSize: 18),
         ),
-      ),
+    leading: IconButton(
+    icon: Icon(Icons.arrow_back, color: Colors.black), // Back arrow icon
+    onPressed: () {
+    Navigator.of(context).pop();}
+      )),
       body:
       wishlistProvider.getWishList.isEmpty?Center(
     child: Lottie.asset(

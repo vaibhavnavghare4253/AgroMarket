@@ -1,6 +1,88 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../screens/home_screen/home_screen.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  bool isLoading = false;
+
+  // Function to handle login
+  void loginUser() async {
+    setState(() => isLoading = true);
+
+    try {
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
+
+      User? user = userCredential.user;
+      if (user != null) {
+        print("✅ Logged in successfully, UID: ${user.uid}");
+        navigateToHome(user.uid);
+      } else {
+        print("❌ Login failed, user is null");
+        showSnackbar("Login failed. Please try again.");
+      }
+    } catch (e) {
+      print("❌ Error: $e");
+      showSnackbar("Error: ${e.toString()}");
+      setState(() => isLoading = false);
+    }
+  }
+
+  // Function to navigate to home screen based on user role
+  void navigateToHome(String userId) async {
+    try {
+      print("🔍 Fetching user data for UID: $userId");
+
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .get();
+
+      if (userDoc.exists) {
+        print("✅ User data found: ${userDoc.data()}");
+
+        if (userDoc.data() != null && userDoc['role'] != null) {
+          String role = userDoc['role'];
+          print("🎭 User role: $role");
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomeScreen()),
+          );
+        } else {
+          print("⚠️ 'role' field missing in Firestore document");
+          showSnackbar("User data is incomplete.");
+        }
+      } else {
+        print("❌ No document found for this UID");
+        showSnackbar("User data not found!");
+      }
+    } catch (e) {
+      print("❌ Error fetching user data: $e");
+      showSnackbar("Failed to fetch user data: ${e.toString()}");
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
+
+  // Function to show error messages
+  void showSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -16,18 +98,29 @@ class LoginScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text("Welcome, Glad to see you!", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
+            Text(
+              "Welcome, Glad to see you!",
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
             SizedBox(height: 20),
-            _buildTextField("Email Address"),
-            _buildTextField("Password", isPassword: true),
+            _buildTextField("Email Address", emailController),
+            _buildTextField("Password", passwordController, isPassword: true),
             Align(
               alignment: Alignment.centerRight,
-              child: TextButton(onPressed: () {}, child: Text("Forgot Password?", style: TextStyle(color: Colors.white))),
+              child: TextButton(
+                onPressed: () {}, // Add Forgot Password Functionality
+                child: Text("Forgot Password?", style: TextStyle(color: Colors.white)),
+              ),
             ),
-            _buildButton("Login"),
-
+            isLoading
+                ? CircularProgressIndicator()
+                : _buildButton("Login", loginUser),
             TextButton(
-              onPressed: () {},
+              onPressed: () {}, // Add Sign Up Navigation
               child: Text("Don't have an account? Sign Up Now", style: TextStyle(color: Colors.white)),
             ),
           ],
@@ -36,10 +129,11 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTextField(String hint, {bool isPassword = false}) {
+  Widget _buildTextField(String hint, TextEditingController controller, {bool isPassword = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: TextField(
+        controller: controller,
         obscureText: isPassword,
         decoration: InputDecoration(
           hintText: hint,
@@ -51,11 +145,11 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildButton(String text) {
+  Widget _buildButton(String text, VoidCallback onPressed) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: ElevatedButton(
-        onPressed: () {},
+        onPressed: onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.white,
           foregroundColor: Colors.black,
@@ -66,57 +160,70 @@ class LoginScreen extends StatelessWidget {
       ),
     );
   }
-
-
-
-  Widget _socialButton(String assetPath) {
-    return CircleAvatar(
-      radius: 25,
-      backgroundColor: Colors.white,
-      child: Image.asset(assetPath, height: 30),
-    );
-  }
 }
 
 
 
-
 // import 'package:flutter/material.dart';
-// import 'package:firebase_core/firebase_core.dart';
 // import 'package:firebase_auth/firebase_auth.dart';
 // import 'package:cloud_firestore/cloud_firestore.dart';
+// import '../screens/home_screen/home_screen.dart';
 //
-//
-// class EmailLoginPage extends StatefulWidget {
+// class LoginScreen extends StatefulWidget {
 //   @override
-//   _EmailLoginPageState createState() => _EmailLoginPageState();
+//   _LoginScreenState createState() => _LoginScreenState();
 // }
 //
-// class _EmailLoginPageState extends State<EmailLoginPage> {
+// class _LoginScreenState extends State<LoginScreen> {
 //   final TextEditingController emailController = TextEditingController();
 //   final TextEditingController passwordController = TextEditingController();
 //   final FirebaseAuth _auth = FirebaseAuth.instance;
+//   bool isLoading = false;
 //
 //   void loginUser() async {
+//     setState(() => isLoading = true);
 //     try {
+//       // Authenticate user
 //       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
 //         email: emailController.text.trim(),
 //         password: passwordController.text.trim(),
 //       );
+//
+//       // Navigate based on user role
 //       navigateToHome(userCredential.user!.uid);
 //     } catch (e) {
-//       print("Error: $e");
+//       setState(() => isLoading = false);
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(content: Text("Error: ${e.toString()}")),
+//       );
 //     }
 //   }
 //
 //   void navigateToHome(String userId) async {
-//     DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
-//     if (userDoc.exists) {
-//       String role = userDoc['role'];
-//       if (role == 'User') {
-//         Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => UserHomePage()));
+//     try {
+//       DocumentSnapshot userDoc = await FirebaseFirestore.instance
+//           .collection('users')
+//           .doc(userId)
+//           .get();
+//
+//       if (userDoc.exists) {
+//         String role = userDoc['role'];
+//         Navigator.pushReplacement(
+//           context,
+//           MaterialPageRoute(builder: (context) => HomeScreen()),
+//         );
 //       } else {
-//         Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ShopOwnerHomePage()));
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           SnackBar(content: Text("User data not found! Please contact support.")),
+//         );
+//       }
+//     } catch (e) {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(content: Text("Failed to fetch user data: ${e.toString()}")),
+//       );
+//     } finally {
+//       if (mounted) {
+//         setState(() => isLoading = false);
 //       }
 //     }
 //   }
@@ -124,38 +231,78 @@ class LoginScreen extends StatelessWidget {
 //   @override
 //   Widget build(BuildContext context) {
 //     return Scaffold(
-//       appBar: AppBar(title: Text('Email Login')),
-//       body: Padding(
-//         padding: EdgeInsets.all(16.0),
+//       body: Container(
+//         padding: EdgeInsets.all(20),
+//         decoration: BoxDecoration(
+//           gradient: LinearGradient(
+//             colors: [Colors.green.shade300, Colors.blue.shade200],
+//             begin: Alignment.topCenter,
+//             end: Alignment.bottomCenter,
+//           ),
+//         ),
 //         child: Column(
+//           mainAxisAlignment: MainAxisAlignment.center,
 //           children: [
-//             TextField(controller: emailController, decoration: InputDecoration(labelText: 'Email')),
-//             TextField(controller: passwordController, decoration: InputDecoration(labelText: 'Password'), obscureText: true),
+//             Text(
+//               "Welcome, Glad to see you!",
+//               style: TextStyle(
+//                 fontSize: 22,
+//                 fontWeight: FontWeight.bold,
+//                 color: Colors.white,
+//               ),
+//             ),
 //             SizedBox(height: 20),
-//             ElevatedButton(onPressed: loginUser, child: Text('Login')),
+//             _buildTextField("Email Address", emailController),
+//             _buildTextField("Password", passwordController, isPassword: true),
+//             Align(
+//               alignment: Alignment.centerRight,
+//               child: TextButton(
+//                 onPressed: () {}, // Add Forgot Password Functionality
+//                 child: Text("Forgot Password?", style: TextStyle(color: Colors.white)),
+//               ),
+//             ),
+//             isLoading
+//                 ? CircularProgressIndicator()
+//                 : _buildButton("Login", loginUser),
+//             TextButton(
+//               onPressed: () {}, // Add Sign Up Navigation
+//               child: Text("Don't have an account? Sign Up Now", style: TextStyle(color: Colors.white)),
+//             ),
 //           ],
 //         ),
 //       ),
 //     );
 //   }
-// }
 //
-// class UserHomePage extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(title: Text('User Home')),
-//       body: Center(child: Text('Welcome, User!')),
+//   Widget _buildTextField(String hint, TextEditingController controller, {bool isPassword = false}) {
+//     return Padding(
+//       padding: const EdgeInsets.symmetric(vertical: 10),
+//       child: TextField(
+//         controller: controller,
+//         obscureText: isPassword,
+//         decoration: InputDecoration(
+//           hintText: hint,
+//           fillColor: Colors.white,
+//           filled: true,
+//           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+//         ),
+//       ),
 //     );
 //   }
-// }
 //
-// class ShopOwnerHomePage extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(title: Text('Shop Owner Home')),
-//       body: Center(child: Text('Welcome, Shop Owner!')),
+//   Widget _buildButton(String text, VoidCallback onPressed) {
+//     return Padding(
+//       padding: const EdgeInsets.symmetric(vertical: 10),
+//       child: ElevatedButton(
+//         onPressed: onPressed,
+//         style: ElevatedButton.styleFrom(
+//           backgroundColor: Colors.white,
+//           foregroundColor: Colors.black,
+//           minimumSize: Size(double.infinity, 50),
+//           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+//         ),
+//         child: Text(text),
+//       ),
 //     );
 //   }
 // }
@@ -165,216 +312,160 @@ class LoginScreen extends StatelessWidget {
 //
 //
 // // import 'package:flutter/material.dart';
-// // import 'package:firebase_core/firebase_core.dart';
 // // import 'package:firebase_auth/firebase_auth.dart';
 // // import 'package:cloud_firestore/cloud_firestore.dart';
+// // import '../screens/home_screen/home_screen.dart';
 // //
-// //
-// // class LoginPage extends StatelessWidget {
+// // class LoginScreen extends StatefulWidget {
 // //   @override
-// //   Widget build(BuildContext context) {
-// //     return Scaffold(
-// //       appBar: AppBar(title: Text('Login')),
-// //       body: Padding(
-// //         padding: EdgeInsets.all(16.0),
-// //         child: Column(
-// //           mainAxisAlignment: MainAxisAlignment.center,
-// //           children: [
-// //             ElevatedButton(
-// //               onPressed: () {
-// //                 Navigator.push(context, MaterialPageRoute(builder: (context) => EmailLoginPage()));
-// //               },
-// //               child: Text('Login with Email'),
-// //             ),
-// //             SizedBox(height: 10),
-// //             ElevatedButton(
-// //               onPressed: () {
-// //                 Navigator.push(context, MaterialPageRoute(builder: (context) => PhoneLoginPage()));
-// //               },
-// //               child: Text('Login with Phone'),
-// //             ),
-// //           ],
-// //         ),
-// //       ),
-// //     );
-// //   }
+// //   _LoginScreenState createState() => _LoginScreenState();
 // // }
 // //
-// // class EmailLoginPage extends StatefulWidget {
-// //   @override
-// //   _EmailLoginPageState createState() => _EmailLoginPageState();
-// // }
-// //
-// // class _EmailLoginPageState extends State<EmailLoginPage> {
+// // class _LoginScreenState extends State<LoginScreen> {
 // //   final TextEditingController emailController = TextEditingController();
 // //   final TextEditingController passwordController = TextEditingController();
 // //   final FirebaseAuth _auth = FirebaseAuth.instance;
+// //   bool isLoading = false;
 // //
 // //   void loginUser() async {
+// //     setState(() => isLoading = true);
 // //     try {
+// //       // Check if user already logged in to avoid unnecessary login attempts
+// //       User? currentUser = _auth.currentUser;
+// //       if (currentUser != null) {
+// //         navigateToHome(currentUser.uid);
+// //         return;
+// //       }
+// //
+// //       // Authenticate user
 // //       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
 // //         email: emailController.text.trim(),
 // //         password: passwordController.text.trim(),
 // //       );
+// //
+// //       // Navigate based on user role
 // //       navigateToHome(userCredential.user!.uid);
 // //     } catch (e) {
-// //       print("Error: $e");
-// //     }
-// //   }
-// //
-// //   void navigateToHome(String userId) async {
-// //     DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
-// //     if (userDoc.exists) {
-// //       String role = userDoc['role'];
-// //       if (role == 'User') {
-// //         Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => UserHomePage()));
-// //       } else {
-// //         Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ShopOwnerHomePage()));
-// //       }
-// //     }
-// //   }
-// //
-// //   @override
-// //   Widget build(BuildContext context) {
-// //     return Scaffold(
-// //       appBar: AppBar(title: Text('Email Login')),
-// //       body: Padding(
-// //         padding: EdgeInsets.all(16.0),
-// //         child: Column(
-// //           children: [
-// //             TextField(controller: emailController, decoration: InputDecoration(labelText: 'Email')),
-// //             TextField(controller: passwordController, decoration: InputDecoration(labelText: 'Password'), obscureText: true),
-// //             SizedBox(height: 20),
-// //             ElevatedButton(onPressed: loginUser, child: Text('Login')),
-// //           ],
-// //         ),
-// //       ),
-// //     );
-// //   }
-// // }
-// //
-// // class PhoneLoginPage extends StatefulWidget {
-// //   @override
-// //   _PhoneLoginPageState createState() => _PhoneLoginPageState();
-// // }
-// //
-// // class _PhoneLoginPageState extends State<PhoneLoginPage> {
-// //   final TextEditingController phoneController = TextEditingController();
-// //   final FirebaseAuth _auth = FirebaseAuth.instance;
-// //   String verificationId = '';
-// //
-// //   void sendOTP() async {
-// //     await _auth.verifyPhoneNumber(
-// //       phoneNumber: '+91${phoneController.text.trim()}',
-// //       verificationCompleted: (PhoneAuthCredential credential) async {
-// //         await _auth.signInWithCredential(credential);
-// //       },
-// //       verificationFailed: (FirebaseAuthException e) {
-// //         print("Verification Failed: $e");
-// //       },
-// //       codeSent: (String verId, int? resendToken) {
-// //         setState(() {
-// //           verificationId = verId;
-// //         });
-// //         Navigator.push(context, MaterialPageRoute(builder: (context) => OTPVerificationPage(verificationId: verificationId)));
-// //       },
-// //       codeAutoRetrievalTimeout: (String verId) {
-// //         setState(() {
-// //           verificationId = verId;
-// //         });
-// //       },
-// //     );
-// //   }
-// //
-// //   @override
-// //   Widget build(BuildContext context) {
-// //     return Scaffold(
-// //       appBar: AppBar(title: Text('Phone Login')),
-// //       body: Padding(
-// //         padding: EdgeInsets.all(16.0),
-// //         child: Column(
-// //           children: [
-// //             TextField(controller: phoneController, decoration: InputDecoration(labelText: 'Phone Number')),
-// //             SizedBox(height: 20),
-// //             ElevatedButton(onPressed: sendOTP, child: Text('Send OTP')),
-// //           ],
-// //         ),
-// //       ),
-// //     );
-// //   }
-// // }
-// //
-// // class OTPVerificationPage extends StatefulWidget {
-// //   final String verificationId;
-// //   OTPVerificationPage({required this.verificationId});
-// //
-// //   @override
-// //   _OTPVerificationPageState createState() => _OTPVerificationPageState();
-// // }
-// //
-// // class _OTPVerificationPageState extends State<OTPVerificationPage> {
-// //   final TextEditingController otpController = TextEditingController();
-// //   final FirebaseAuth _auth = FirebaseAuth.instance;
-// //
-// //   void verifyOTP() async {
-// //     try {
-// //       PhoneAuthCredential credential = PhoneAuthProvider.credential(
-// //         verificationId: widget.verificationId,
-// //         smsCode: otpController.text.trim(),
+// //       setState(() => isLoading = false);
+// //       ScaffoldMessenger.of(context).showSnackBar(
+// //         SnackBar(content: Text("Error: ${e.toString()}")),
 // //       );
-// //       UserCredential userCredential = await _auth.signInWithCredential(credential);
-// //       navigateToHome(userCredential.user!.uid);
-// //     } catch (e) {
-// //       print("Error: $e");
 // //     }
 // //   }
 // //
 // //   void navigateToHome(String userId) async {
-// //     DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
-// //     if (userDoc.exists) {
-// //       String role = userDoc['role'];
-// //       if (role == 'User') {
-// //         Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => UserHomePage()));
-// //       } else {
-// //         Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ShopOwnerHomePage()));
+// //     try {
+// //       DocumentSnapshot userDoc = await FirebaseFirestore.instance
+// //           .collection('users')
+// //           .doc(userId)
+// //           .get();
+// //
+// //       if (userDoc.exists) {
+// //         String role = userDoc['role'];
+// //         // Navigate to respective home screen
+// //         Navigator.pushReplacement(
+// //           context,
+// //           MaterialPageRoute(builder: (context) => HomeScreen()),
+// //         );
 // //       }
+// //     } catch (e) {
+// //       ScaffoldMessenger.of(context).showSnackBar(
+// //         SnackBar(content: Text("Failed to fetch user data: ${e.toString()}")),
+// //       );
+// //     } finally {
+// //       setState(() => isLoading = false);
 // //     }
 // //   }
 // //
 // //   @override
 // //   Widget build(BuildContext context) {
 // //     return Scaffold(
-// //       appBar: AppBar(title: Text('OTP Verification')),
-// //       body: Padding(
-// //         padding: EdgeInsets.all(16.0),
+// //       body: Container(
+// //         padding: EdgeInsets.all(20),
+// //         decoration: BoxDecoration(
+// //           gradient: LinearGradient(
+// //             colors: [Colors.green.shade300, Colors.blue.shade200],
+// //             begin: Alignment.topCenter,
+// //             end: Alignment.bottomCenter,
+// //           ),
+// //         ),
 // //         child: Column(
+// //           mainAxisAlignment: MainAxisAlignment.center,
 // //           children: [
-// //             TextField(controller: otpController, decoration: InputDecoration(labelText: 'Enter OTP')),
+// //             Text(
+// //               "Welcome, Glad to see you!",
+// //               style: TextStyle(
+// //                 fontSize: 22,
+// //                 fontWeight: FontWeight.bold,
+// //                 color: Colors.white,
+// //               ),
+// //             ),
 // //             SizedBox(height: 20),
-// //             ElevatedButton(onPressed: verifyOTP, child: Text('Verify OTP')),
+// //             _buildTextField("Email Address", emailController),
+// //             _buildTextField("Password", passwordController, isPassword: true),
+// //             Align(
+// //               alignment: Alignment.centerRight,
+// //               child: TextButton(
+// //                 onPressed: () {}, // Add Forgot Password Functionality
+// //                 child: Text("Forgot Password?", style: TextStyle(color: Colors.white)),
+// //               ),
+// //             ),
+// //             isLoading
+// //                 ? CircularProgressIndicator()
+// //                 : _buildButton("Login", loginUser),
+// //             TextButton(
+// //               onPressed: () {}, // Add Sign Up Navigation
+// //               child: Text("Don't have an account? Sign Up Now", style: TextStyle(color: Colors.white)),
+// //             ),
 // //           ],
 // //         ),
 // //       ),
 // //     );
 // //   }
-// // }
 // //
-// // class UserHomePage extends StatelessWidget {
-// //   @override
-// //   Widget build(BuildContext context) {
-// //     return Scaffold(
-// //       appBar: AppBar(title: Text('User Home')),
-// //       body: Center(child: Text('Welcome, User!')),
+// //   Widget _buildTextField(String hint, TextEditingController controller, {bool isPassword = false}) {
+// //     return Padding(
+// //       padding: const EdgeInsets.symmetric(vertical: 10),
+// //       child: TextField(
+// //         controller: controller,
+// //         obscureText: isPassword,
+// //         decoration: InputDecoration(
+// //           hintText: hint,
+// //           fillColor: Colors.white,
+// //           filled: true,
+// //           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+// //         ),
+// //       ),
+// //     );
+// //   }
+// //
+// //   Widget _buildButton(String text, VoidCallback onPressed) {
+// //     return Padding(
+// //       padding: const EdgeInsets.symmetric(vertical: 10),
+// //       child: ElevatedButton(
+// //         onPressed: onPressed,
+// //         style: ElevatedButton.styleFrom(
+// //           backgroundColor: Colors.white,
+// //           foregroundColor: Colors.black,
+// //           minimumSize: Size(double.infinity, 50),
+// //           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+// //         ),
+// //         child: Text(text),
+// //       ),
 // //     );
 // //   }
 // // }
 // //
-// // class ShopOwnerHomePage extends StatelessWidget {
-// //   @override
-// //   Widget build(BuildContext context) {
-// //     return Scaffold(
-// //       appBar: AppBar(title: Text('Shop Owner Home')),
-// //       body: Center(child: Text('Welcome, Shop Owner!')),
+// //
+// //
+// // Future<void> loginUser(String email, String password) async {
+// //   try {
+// //     await FirebaseAuth.instance.signInWithEmailAndPassword(
+// //       email: email,
+// //       password: password,
 // //     );
+// //     print("✅ Login Successful");
+// //   } catch (e) {
+// //     print("❌ Error: $e");
 // //   }
 // // }
