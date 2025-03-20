@@ -1,4 +1,3 @@
-
 import 'package:agri_market/config/colors.dart';
 import 'package:agri_market/providers/check_out_provider.dart';
 import 'package:agri_market/providers/product_provider.dart';
