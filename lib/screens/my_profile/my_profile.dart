@@ -1,9 +1,11 @@
+import 'package:agri_market/screens/retunrn%20policy/return_policy_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:agri_market/config/colors.dart';
 import 'package:agri_market/screens/home_screen/drawer_side.dart';
 import '../../auth/welcomescreen.dart';
+import '../check_out/dilevery_details/dilevery_delails.dart';
 
 class MyProfile extends StatefulWidget {
   @override
@@ -13,7 +15,6 @@ class MyProfile extends StatefulWidget {
 class _MyProfileState extends State<MyProfile> {
   final User? user = FirebaseAuth.instance.currentUser;
 
-  String userName = "Guest User";
   String userEmail = "No Email";
   String userImage = "assets/default_avatar.png";
 
@@ -31,7 +32,6 @@ class _MyProfileState extends State<MyProfile> {
 
       if (userDoc.exists) {
         setState(() {
-          userName = userDoc["name"] ?? "Guest User";
           userEmail = userDoc["email"] ?? "No Email";
           userImage = userDoc["image"] ?? "assets/default_avatar.png";
         });
@@ -43,6 +43,29 @@ class _MyProfileState extends State<MyProfile> {
     }
   }
 
+  void navigateToScreen(String screenName) {
+    // Replace these with actual navigation routes
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) {
+        switch (screenName) {
+          case "My Delivery Address":
+            return DeliveryDetails(); // Create this screen
+          case "Return Policy":
+            return ReturnPolicyScreen(); // Create this screen
+          case "Terms & Conditions":
+            return DeliveryDetails(); // Create this screen
+          case "Privacy Policy":
+            return DeliveryDetails(); // Create this screen
+          case "About":
+            return DeliveryDetails(); // Create this screen
+          default:
+            return MyProfile();
+        }
+      }),
+    );
+  }
+
   Widget listTile({required IconData icon, required String title}) {
     return Column(
       children: [
@@ -51,6 +74,7 @@ class _MyProfileState extends State<MyProfile> {
           leading: Icon(icon, color: Colors.black87),
           title: Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
           trailing: Icon(Icons.arrow_forward_ios, size: 18),
+          onTap: () => navigateToScreen(title), // Navigate on tap
         ),
       ],
     );
@@ -81,7 +105,8 @@ class _MyProfileState extends State<MyProfile> {
                       padding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
                       decoration: BoxDecoration(
                         color: scaffoldBackgroundColor,
-                        borderRadius: BorderRadius.only(topLeft: Radius.circular(30), topRight: Radius.circular(30)),
+                        borderRadius:
+                        BorderRadius.only(topLeft: Radius.circular(30), topRight: Radius.circular(30)),
                       ),
                       child: Column(
                         children: [
@@ -89,29 +114,11 @@ class _MyProfileState extends State<MyProfile> {
                           Container(
                             width: double.infinity,
                             padding: EdgeInsets.symmetric(horizontal: 20),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      userName,
-                                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textColor),
-                                    ),
-                                    SizedBox(height: 10),
-                                    Text(userEmail, style: TextStyle(color: Colors.grey[700])),
-                                  ],
-                                ),
-                                CircleAvatar(
-                                  radius: 15,
-                                  backgroundColor: primaryColor,
-                                  child: CircleAvatar(
-                                    radius: 12,
-                                    backgroundColor: scaffoldBackgroundColor,
-                                    child: Icon(Icons.edit, color: primaryColor),
-                                  ),
-                                ),
+                                Text(userEmail,
+                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textColor)),
                               ],
                             ),
                           ),
@@ -122,7 +129,7 @@ class _MyProfileState extends State<MyProfile> {
                               physics: NeverScrollableScrollPhysics(),
                               children: [
                                 listTile(icon: Icons.location_on_outlined, title: "My Delivery Address"),
-                                listTile(icon: Icons.person_outline, title: "Refer A Friend"),
+                                listTile(icon: Icons.person_outline, title: "Return Policy"),
                                 listTile(icon: Icons.file_copy_outlined, title: "Terms & Conditions"),
                                 listTile(icon: Icons.policy_outlined, title: "Privacy Policy"),
                                 listTile(icon: Icons.info_outline, title: "About"),
