@@ -15,75 +15,100 @@ class ProductOverview extends StatefulWidget {
   final int productPrice;
   final String productId;
 
-  ProductOverview({required this.productName, required this.productImage, required this.productPrice, required this.productId});
+  ProductOverview({
+    required this.productName,
+    required this.productImage,
+    required this.productPrice,
+    required this.productId,
+  });
+
   @override
   _ProductOverviewState createState() => _ProductOverviewState();
 }
 
 class _ProductOverviewState extends State<ProductOverview> {
   SinginCharacter _character = SinginCharacter.fill;
+  bool wishListBool = false;
+  int stockCount = 0; // Holds the stock value
 
-  Widget bottomNavigatorBar({
-    required Color iconColor,
-    required Color backgroundColor,
-    required Color color,
-    required String title,
-    required IconData iconData,
-    VoidCallback? onTab,
-  }) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTab,
-        child: Container(
-          padding: EdgeInsets.all(20),
-          color: backgroundColor,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                iconData,
-                size: 20,
-                color: iconColor,
-              ),
-              SizedBox(width: 5),
-              Text(
-                title,
-                style: TextStyle(
-                  color: color,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+  @override
+  void initState() {
+    super.initState();
+    fetchStockCount();
+    getWishlistBool();
   }
 
-  bool wishListBool = false;
-  getWishlistBool() {
-    FirebaseFirestore.instance
-        .collection("WishList")
-        .doc(FirebaseAuth.instance.currentUser?.uid)
-        .collection("YourWishList")
-        .doc(widget.productId)
-        .get()
-        .then((value) => {
-          if (this.mounted) {
-            if(value.exists){
-              setState(() {
-                wishListBool = value.get("wishList");
-              },
-              ),
-            }
-          }
+  // Function to fetch stock count from Firestore
+  void fetchStockCount() async {
+    try {
+      DocumentSnapshot doc = await FirebaseFirestore.instance
+          .collection("Products")
+          .doc(widget.productId)
+          .get();
 
-    });
+      if (doc.exists && doc.data() != null) {
+        var data = doc.data() as Map<String, dynamic>;
+        if (data.containsKey("stock")) {
+          setState(() {
+            stockCount = data["stock"];
+          });
+        }
+      }
+      print("Fetched Stock: $stockCount"); // Debugging
+    } catch (e) {
+      print("Error fetching stock: $e"); // Debugging
+    }
+  }
+
+  // Function to fetch wishlist status
+  void getWishlistBool() async {
+    try {
+      DocumentSnapshot value = await FirebaseFirestore.instance
+          .collection("WishList")
+          .doc(FirebaseAuth.instance.currentUser?.uid)
+          .collection("YourWishList")
+          .doc(widget.productId)
+          .get();
+
+      if (mounted) {
+        setState(() {
+          wishListBool = value.exists &&
+              value.data() != null &&
+              (value.data() as Map<String, dynamic>).containsKey("wishList")
+              ? value.get("wishList")
+              : false;
+        });
+      }
+    } catch (e) {
+      print("Error fetching wishlist: $e");
+    }
+  }
+
+  // Function to update stock when a product is added
+  void updateStock(int quantity) async {
+    try {
+      int newStock = stockCount - quantity;
+      if (newStock < 0) newStock = 0; // Prevent negative stock
+
+      await FirebaseFirestore.instance
+          .collection("Products")
+          .doc(widget.productId)
+          .update({"stock": newStock});
+
+      setState(() {
+        stockCount = newStock;
+      });
+
+      print("Updated Stock: $stockCount"); // Debugging
+    } catch (e) {
+      print("Error updating stock: $e");
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     WishListProvider wishListProvider = Provider.of(context);
-    getWishlistBool();
+
     return Scaffold(
       appBar: AppBar(
         iconTheme: IconThemeData(color: textColor),
@@ -91,6 +116,21 @@ class _ProductOverviewState extends State<ProductOverview> {
           "Product Overview",
           style: TextStyle(color: textColor),
         ),
+        actions: [
+          Padding(
+            padding: EdgeInsets.only(right: 20),
+            child: Center(
+              child: Text(
+                "Stock: $stockCount",
+                style: TextStyle(
+                  color: Colors.red,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -100,7 +140,6 @@ class _ProductOverviewState extends State<ProductOverview> {
               width: double.infinity,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-
                 children: [
                   Text(
                     "About This Product",
@@ -111,14 +150,10 @@ class _ProductOverviewState extends State<ProductOverview> {
                   ),
                   SizedBox(height: 15),
                   Text(
-                    "In marketing, a product is an object, or system, or service made available for consumer use as of the consumer demand...",
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: textColor,
-                    ),
+                    "In marketing, a product is an object, system, or service made available for consumer use as per consumer demand...",
+                    style: TextStyle(fontSize: 16, color: textColor),
                   ),
                 ],
-
               ),
             ),
           ),
@@ -136,8 +171,7 @@ class _ProductOverviewState extends State<ProductOverview> {
                     height: 250,
                     padding: EdgeInsets.all(40),
                     child: Image.network(
-                      widget.productImage??"",
-                      //"https://tse3.mm.bing.net/th?id=OIP.s033-QYzCL3uKbRmhTmpPgHaE5&pid=Api&P=0&h=180"
+                      widget.productImage ?? "",
                     ),
                   ),
                   Container(
@@ -181,31 +215,10 @@ class _ProductOverviewState extends State<ProductOverview> {
                           productImage: widget.productImage,
                           productName: widget.productName,
                           productPrice: widget.productPrice,
+                          onItemAdded: (quantity) {
+                            updateStock(quantity);
+                          },
                         ),
-                        // Container(
-                        //   padding: EdgeInsets.symmetric(
-                        //     horizontal: 30,
-                        //     vertical: 10,
-                        //   ),
-                        //   decoration: BoxDecoration(
-                        //     border: Border.all(color: Colors.grey),
-                        //     borderRadius: BorderRadius.circular(30),
-                        //   ),
-                        //   child: Row(
-                        //     mainAxisAlignment: MainAxisAlignment.center,
-                        //     children: [
-                        //       Icon(
-                        //         Icons.add,
-                        //         size: 17,
-                        //         color: primaryColor,
-                        //       ),
-                        //       Text(
-                        //         "ADD",
-                        //         style: TextStyle(color: primaryColor),
-                        //       ),
-                        //     ],
-                        //   ),
-                        // ),
                       ],
                     ),
                   ),
@@ -215,50 +228,76 @@ class _ProductOverviewState extends State<ProductOverview> {
           ),
         ],
       ),
-
-
-
       bottomNavigationBar: Row(
         children: [
-          bottomNavigatorBar(
-            backgroundColor: textColor,
-            color: Colors.white70,
-            iconColor: Colors.grey,
-            title: "Add To WishList",
-            iconData: wishListBool==false?Icons.favorite_outline:Icons.favorite,
-            onTab: (){
-              setState(() {
-                wishListBool = !wishListBool;
-              });
-              if(wishListBool==true){
-                wishListProvider.addWishListData(
-                  wishListId: widget.productId,
-                  wishListImage: widget.productImage,
-                  wishListName: widget.productName,
-                  wishlistPrice: widget.productPrice,
-                  wishListQuantity: 1,
-                );
-              }else{
-                wishListProvider.deleteWishList(widget.productId);
-              }
-            }
-          ),
-          bottomNavigatorBar(
-            backgroundColor: primaryColor,
-            color: textColor,
-            iconColor: Colors.black,
-            title: "Go To Cart",
-            iconData: Icons.shopping_cart_outlined,
-            onTab: (){
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => ReviewCart(),
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  wishListBool = !wishListBool;
+                });
+
+                if (wishListBool) {
+                  wishListProvider.addWishListData(
+                    wishListId: widget.productId,
+                    wishListImage: widget.productImage,
+                    wishListName: widget.productName,
+                    wishlistPrice: widget.productPrice,
+                    wishListQuantity: 1,
+                  );
+                } else {
+                  wishListProvider.deleteWishList(widget.productId);
+                }
+              },
+              child: Container(
+                padding: EdgeInsets.all(20),
+                color: textColor,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      wishListBool ? Icons.favorite : Icons.favorite_outline,
+                      size: 20,
+                      color: Colors.grey,
+                    ),
+                    SizedBox(width: 5),
+                    Text(
+                      "Add To Wishlist",
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                  ],
                 ),
-              );
-            }
+              ),
+            ),
+          ),
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => ReviewCart(),
+                  ),
+                );
+              },
+              child: Container(
+                padding: EdgeInsets.all(20),
+                color: primaryColor,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.shopping_cart_outlined, size: 20, color: Colors.black),
+                    SizedBox(width: 5),
+                    Text("Go To Cart", style: TextStyle(color: textColor)),
+                  ],
+                ),
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 }
+
+
+
