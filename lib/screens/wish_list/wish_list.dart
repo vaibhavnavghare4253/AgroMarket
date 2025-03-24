@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 
+import '../home_screen/drawer_side.dart';
+
 class WishList extends StatefulWidget {
   @override
   _WishListState createState() => _WishListState();
@@ -59,11 +61,19 @@ class _WishListState extends State<WishList> {
           "WishList",
           style: TextStyle(color: textColor, fontSize: 18),
         ),
-    leading: IconButton(
-    icon: Icon(Icons.arrow_back, color: Colors.black), // Back arrow icon
-    onPressed: () {
-    Navigator.of(context).pop();}
-      )),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.black), // Back arrow icon
+          onPressed: () {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context); // Go back to the previous screen safely
+            } else {
+              // If no previous screen, navigate to Home instead of black screen
+              Navigator.pushReplacementNamed(context, "/home");
+            }
+          },
+        ),
+      ),
+
       body:
       wishlistProvider.getWishList.isEmpty?Center(
     child: Lottie.asset(

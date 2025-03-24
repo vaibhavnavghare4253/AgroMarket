@@ -27,10 +27,10 @@ class WelcomeScreen extends StatelessWidget {
             SizedBox(height: 130),
             _buildButton(context, "Login", LoginScreen()),
             _buildButton(context, "Sign Up", SignUpScreen()),
-            TextButton(
-              onPressed: () {},
-              child: Text("Continue as a guest", style: TextStyle(color: Colors.white)),
-            ),
+            // TextButton(
+            //   onPressed: () {},
+            //   child: Text("Continue as a guest", style: TextStyle(color: Colors.white)),
+            // ),
             SizedBox(height: 30),
           ],
         ),

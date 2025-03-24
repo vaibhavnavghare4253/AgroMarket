@@ -15,7 +15,7 @@ class MyProfile extends StatefulWidget {
 class _MyProfileState extends State<MyProfile> {
   final User? user = FirebaseAuth.instance.currentUser;
 
-  String userEmail = "No Email";
+  String userEmail = "Fetching...";
   String userImage = "assets/default_avatar.png";
 
   @override
@@ -27,38 +27,50 @@ class _MyProfileState extends State<MyProfile> {
   // Fetch user details from Firestore
   Future<void> fetchUserData() async {
     if (user != null) {
-      DocumentSnapshot userDoc =
-      await FirebaseFirestore.instance.collection("users").doc(user!.uid).get();
+      try {
+        DocumentSnapshot userDoc =
+        await FirebaseFirestore.instance.collection("users").doc(user!.uid).get();
 
-      if (userDoc.exists) {
+        if (userDoc.exists) {
+          setState(() {
+            userEmail = userDoc["email"] ?? "No Email";
+            userImage = userDoc["image"] ?? "assets/default_avatar.png";
+          });
+        } else {
+          setState(() {
+            userEmail = "Email Not Found";
+          });
+          print("User document not found in Firestore.");
+        }
+      } catch (e) {
         setState(() {
-          userEmail = userDoc["email"] ?? "No Email";
-          userImage = userDoc["image"] ?? "assets/default_avatar.png";
+          userEmail = "Error Fetching Email";
         });
-      } else {
-        print("User document not found in Firestore.");
+        print("Error fetching user data: $e");
       }
     } else {
+      setState(() {
+        userEmail = "User Not Logged In";
+      });
       print("User not logged in.");
     }
   }
 
   void navigateToScreen(String screenName) {
-    // Replace these with actual navigation routes
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) {
         switch (screenName) {
           case "My Delivery Address":
-            return DeliveryDetails(); // Create this screen
+            return DeliveryDetails();
           case "Return Policy":
-            return ReturnPolicyScreen(); // Create this screen
+            return ReturnPolicyScreen();
           case "Terms & Conditions":
-            return DeliveryDetails(); // Create this screen
+            return DeliveryDetails();
           case "Privacy Policy":
-            return DeliveryDetails(); // Create this screen
+            return DeliveryDetails();
           case "About":
-            return DeliveryDetails(); // Create this screen
+            return DeliveryDetails();
           default:
             return MyProfile();
         }
@@ -74,7 +86,7 @@ class _MyProfileState extends State<MyProfile> {
           leading: Icon(icon, color: Colors.black87),
           title: Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
           trailing: Icon(Icons.arrow_forward_ios, size: 18),
-          onTap: () => navigateToScreen(title), // Navigate on tap
+          onTap: () => navigateToScreen(title),
         ),
       ],
     );
@@ -111,14 +123,17 @@ class _MyProfileState extends State<MyProfile> {
                       child: Column(
                         children: [
                           SizedBox(height: 60), // Space for Profile Picture
+                          // User Email Display
                           Container(
                             width: double.infinity,
                             padding: EdgeInsets.symmetric(horizontal: 20),
                             child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                Text(userEmail,
-                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textColor)),
+                                Text(
+                                  userEmail,
+                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textColor),
+                                ),
                               ],
                             ),
                           ),
@@ -137,7 +152,8 @@ class _MyProfileState extends State<MyProfile> {
                                 // Logout Button
                                 ListTile(
                                   leading: Icon(Icons.exit_to_app_outlined, color: Colors.redAccent),
-                                  title: Text("Log Out", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                                  title: Text("Log Out",
+                                      style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
                                   onTap: () async {
                                     await FirebaseAuth.instance.signOut();
                                     Navigator.of(context).pushReplacement(
@@ -177,3 +193,6 @@ class _MyProfileState extends State<MyProfile> {
     );
   }
 }
+
+
+

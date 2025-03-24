@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'login.dart';
+
 class SignUpScreen extends StatefulWidget {
   @override
   _SignUpScreenState createState() => _SignUpScreenState();
@@ -15,7 +17,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController = TextEditingController();
 
-  String? selectedRole; // Role selection
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+
+  String? selectedRole;
   final List<String> roles = ["User", "Shop Owner"];
 
   bool isLoading = false;
@@ -40,13 +45,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
     });
 
     try {
-      // Create User with Firebase Auth
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      // Save user data in Firestore
       await _firestore.collection("users").doc(userCredential.user!.uid).set({
         "email": email,
         "role": selectedRole,
@@ -90,10 +93,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 Text("Create Account\nto get started now!", textAlign: TextAlign.center, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
                 SizedBox(height: 20),
                 _buildTextField(emailController, "Email Address"),
-                _buildTextField(passwordController, "Password", isPassword: true),
-                _buildTextField(confirmPasswordController, "Confirm Password", isPassword: true),
+                _buildPasswordField(passwordController, "Password", _obscurePassword, () {
+                  setState(() {
+                    _obscurePassword = !_obscurePassword;
+                  });
+                }),
+                _buildPasswordField(confirmPasswordController, "Confirm Password", _obscureConfirmPassword, () {
+                  setState(() {
+                    _obscureConfirmPassword = !_obscureConfirmPassword;
+                  });
+                }),
 
-                // Role Selection Dropdown
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   child: Container(
@@ -129,7 +139,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     : _buildButton("Sign Up", _signUp),
 
                 TextButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => LoginScreen()),
+                    );
+                  },
                   child: Text("Already have an account? Login Now", style: TextStyle(color: Colors.white)),
                 ),
               ],
@@ -140,17 +155,36 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String hint, {bool isPassword = false}) {
+  Widget _buildTextField(TextEditingController controller, String hint) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: TextField(
         controller: controller,
-        obscureText: isPassword,
         decoration: InputDecoration(
           hintText: hint,
           fillColor: Colors.white,
           filled: true,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPasswordField(TextEditingController controller, String hint, bool obscureText, VoidCallback toggleVisibility) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: TextField(
+        controller: controller,
+        obscureText: obscureText,
+        decoration: InputDecoration(
+          hintText: hint,
+          fillColor: Colors.white,
+          filled: true,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          suffixIcon: IconButton(
+            icon: Icon(obscureText ? Icons.visibility_off : Icons.visibility),
+            onPressed: toggleVisibility,
+          ),
         ),
       ),
     );
@@ -173,83 +207,3 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 }
 
-
-
-
-
-// import 'package:flutter/material.dart';
-//
-// class SignUpScreen extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       body: Container(
-//         padding: EdgeInsets.all(20),
-//         decoration: BoxDecoration(
-//           gradient: LinearGradient(
-//             colors: [Colors.green.shade300, Colors.blue.shade200],
-//             begin: Alignment.topCenter,
-//             end: Alignment.bottomCenter,
-//           ),
-//         ),
-//         child: Column(
-//           mainAxisAlignment: MainAxisAlignment.center,
-//           children: [
-//             Text("Create Account\nto get started now!", textAlign: TextAlign.center, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
-//             SizedBox(height: 20),
-//             _buildTextField("Email Address"),
-//             _buildTextField("Password", isPassword: true),
-//             _buildTextField("Confirm Password", isPassword: true),
-//             _buildButton("Sign Up"),
-//
-//
-//             TextButton(
-//               onPressed: () {},
-//               child: Text("Already have an account? Login Now", style: TextStyle(color: Colors.white)),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-//
-//   Widget _buildTextField(String hint, {bool isPassword = false}) {
-//     return Padding(
-//       padding: const EdgeInsets.symmetric(vertical: 10),
-//       child: TextField(
-//         obscureText: isPassword,
-//         decoration: InputDecoration(
-//           hintText: hint,
-//           fillColor: Colors.white,
-//           filled: true,
-//           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-//         ),
-//       ),
-//     );
-//   }
-//
-//   Widget _buildButton(String text) {
-//     return Padding(
-//       padding: const EdgeInsets.symmetric(vertical: 10),
-//       child: ElevatedButton(
-//         onPressed: () {},
-//         style: ElevatedButton.styleFrom(
-//           backgroundColor: Colors.white,
-//           foregroundColor: Colors.black,
-//           minimumSize: Size(double.infinity, 50),
-//           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-//         ),
-//         child: Text(text),
-//       ),
-//     );
-//   }
-//
-//
-//   Widget _socialButton(String assetPath) {
-//     return CircleAvatar(
-//       radius: 25,
-//       backgroundColor: Colors.white,
-//       child: Image.asset(assetPath, height: 30),
-//     );
-//   }
-// }

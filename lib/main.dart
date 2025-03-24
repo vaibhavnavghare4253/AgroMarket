@@ -9,7 +9,7 @@ import 'package:agri_market/screens/nav_bar/nav_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'auth/sign_in.dart';
+
 import 'package:firebase_core/firebase_core.dart';
 
 import 'auth/welcomescreen.dart';
@@ -55,12 +55,23 @@ class MyApp extends StatelessWidget {
         home: StreamBuilder(
           stream: FirebaseAuth.instance.authStateChanges(),
           builder: (context, snapShot) {
+            print("Auth state changed: ${snapShot.hasData}"); // Debug print
             if (snapShot.hasData) {
               return BottomNavBar();
             }
             return WelcomeScreen();
           },
         ),
+
+        // home: StreamBuilder(
+        //   stream: FirebaseAuth.instance.authStateChanges(),
+        //   builder: (context, snapShot) {
+        //     if (snapShot.hasData) {
+        //       return BottomNavBar();
+        //     }
+        //     return WelcomeScreen();
+        //   },
+        // ),
       ),
     );
   }

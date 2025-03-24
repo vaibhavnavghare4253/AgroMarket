@@ -3,6 +3,8 @@ import 'package:agri_market/widgets/single_item.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
+import '../home_screen/drawer_side.dart';
+
 class Search extends StatefulWidget {
   final List<ProductModel> search;
 
@@ -32,13 +34,25 @@ class _SearchState extends State<Search> {
       appBar: AppBar(
         title: Text("Search"),
         backgroundColor: Color(0xFF71F377),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Icon(Icons.menu_rounded),
-          ),
-        ],
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.black), // Back arrow icon
+          onPressed: () {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context); // Go back to the previous screen safely
+            } else {
+              // If no previous screen, navigate to Home instead of black screen
+              Navigator.pushReplacementNamed(context, "/home");
+            }
+          },
+        ),
+        // actions: [
+        //   Padding(
+        //     padding: const EdgeInsets.all(8.0),
+        //     child: Icon(Icons.menu_rounded),
+        //   ),
+        // ],
       ),
+      // drawer: DrawerSide(),
       body: ListView(
         children: [
           // Search Field
