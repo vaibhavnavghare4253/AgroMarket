@@ -53,12 +53,11 @@ dependencies:
 
 dev_dependencies:
 
-flutter_launcher_icons:
-  android: true
-  ios: true
-  image_path: "assets/icon/agro_logo.png"  # Path to your icon
-  adaptive_icon_background: "#ffffff"  # Background color for adaptive icons (Android)
-  adaptive_icon_foreground: "assets/icon/agro_logo.png"
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.3.8
+
+
+
   flutter_test:
     sdk: flutter
 
@@ -85,7 +84,20 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
+flutter_native_splash:
+    color: "#ffffff" # or your background color
+    image: assets/agro_logo.png
+    android: true
+    ios: true
+    android_gravity: center
+    ios_content_mode: scaleAspectFit
 
+flutter_launcher_icons:
+    android: true
+    ios: true
+    image_path: "assets/agro_logo.png"  # Path to your icon
+    adaptive_icon_background: "#ffffff"  # Background color for adaptive icons (Android)
+    adaptive_icon_foreground: "assets/agro_logo.png"
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
